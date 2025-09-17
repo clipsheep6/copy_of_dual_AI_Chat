@@ -1,0 +1,111 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8" />
+    <link rel="icon" type="image/svg+xml" href="/favicon.svg" />
+    <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+    <title>Dual AI Chat</title>
+    <script src="https://cdn.tailwindcss.com"></script>
+    <style>
+        :root {
+            --bg-color: #1a1a1a;
+            --text-color: #e0e0e0;
+            --border-color: #444;
+            --primary-color: #4f46e5;
+            --secondary-color: #252525;
+            --user-bubble-bg: #4f46e5;
+            --ai-bubble-bg: #374151;
+            --system-bubble-bg: #5a2d2d;
+        }
+
+        body {
+            background-color: var(--bg-color);
+            color: var(--text-color);
+        }
+
+        /* Custom Scrollbar */
+        ::-webkit-scrollbar {
+            width: 8px;
+            height: 8px;
+        }
+        ::-webkit-scrollbar-track {
+            background: var(--secondary-color);
+        }
+        ::-webkit-scrollbar-thumb {
+            background: #555;
+            border-radius: 4px;
+        }
+        ::-webkit-scrollbar-thumb:hover {
+            background: #666;
+        }
+
+        /* Markdown Preview Styles */
+        .markdown-preview, .chat-markdown-content {
+            prose-invert;
+        }
+        .markdown-preview h1, .chat-markdown-content h1,
+        .markdown-preview h2, .chat-markdown-content h2,
+        .markdown-preview h3, .chat-markdown-content h3 {
+            border-bottom: 1px solid var(--border-color);
+            padding-bottom: 0.3em;
+            margin-top: 1.2em;
+            margin-bottom: 0.8em;
+        }
+        .markdown-preview h1, .chat-markdown-content h1 { font-size: 1.5em; }
+        .markdown-preview h2, .chat-markdown-content h2 { font-size: 1.3em; }
+        .markdown-preview h3, .chat-markdown-content h3 { font-size: 1.15em; }
+
+        .markdown-preview ul, .chat-markdown-content ul,
+        .markdown-preview ol, .chat-markdown-content ol {
+            padding-left: 1.5rem;
+            margin-top: 0.5rem;
+            margin-bottom: 0.5rem;
+        }
+        .markdown-preview li, .chat-markdown-content li { margin-bottom: 0.25rem; }
+        .markdown-preview li > p, .chat-markdown-content li > p { display: inline; }
+
+        .markdown-preview code, .chat-markdown-content code {
+            background-color: #2d2d2d;
+            padding: 0.2em 0.4em;
+            margin: 0;
+            font-size: 85%;
+            border-radius: 6px;
+            font-family: 'Courier New', Courier, monospace;
+        }
+        .markdown-preview pre, .chat-markdown-content pre {
+            background-color: #2d2d2d;
+            padding: 1rem;
+            border-radius: 8px;
+            overflow-x: auto;
+        }
+        .markdown-preview pre code, .chat-markdown-content pre code {
+            padding: 0;
+            background-color: transparent;
+        }
+        .markdown-preview blockquote, .chat-markdown-content blockquote {
+            border-left: 4px solid var(--border-color);
+            padding-left: 1rem;
+            color: #a0a0a0;
+            margin-left: 0;
+        }
+    </style>
+</head>
+<body>
+<div id="root"></div>
+<script type="importmap">
+{
+  "imports": {
+    "react": "https://esm.sh/react@^19.1.0",
+    "react-dom/client": "https://esm.sh/react-dom@^19.1.0/client",
+    "@google/genai": "https://esm.sh/@google/genai@^1.0.1",
+    "lucide-react": "https://esm.sh/lucide-react@^0.511.0",
+    "marked": "https://esm.sh/marked@^13.0.2",
+    "dompurify": "https://esm.sh/dompurify@^3.1.6",
+    "react-dom/": "https://aistudiocdn.com/react-dom@^19.1.1/",
+    "react/": "https://aistudiocdn.com/react@^19.1.1/"
+  }
+}
+</script>
+<script type="module" src="/index.tsx"></script>
+</body>
+</html>

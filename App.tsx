@@ -1,0 +1,183 @@
+import React, { useMemo } from 'react';
+import { Settings, BotMessageSquare, BrainCircuit, MessageSquareQuote, FileText, Languages, PanelLeft, FilePlus2, Square } from 'lucide-react';
+
+import { ChatInput } from './components/ChatInput';
+import { MessageBubble } from './components/MessageBubble';
+import { Notepad } from './components/Notepad';
+import { SettingsModal } from './components/SettingsModal';
+import { HistorySidebar } from './components/HistorySidebar';
+import { useAppUI } from './hooks/useAppUI';
+import { useNotepadLogic } from './hooks/useNotepadLogic';
+import { useChatLogic } from './hooks/useChatLogic';
+import { useLocalization } from './hooks/useLocalization';
+
+const App: React.FC = () => {
+    const { t, language, setLanguage } = useLocalization();
+    const {
+        isSettingsOpen,
+        setIsSettingsOpen,
+        panelWidth,
+        isResizing,
+        handleMouseDown,
+        isNotepadFullScreen,
+        toggleNotepadFullScreen,
+        isSidebarOpen,
+        toggleSidebar,
+    } = useAppUI();
+
+    const initialNotepadContent = useMemo(() => t('initialNotepadContent'), [t]);
+
+    const chat = useChatLogic({ initialNotepadContent });
+
+    const notepad = useNotepadLogic(chat.notepadContent, chat.updateCurrentNotepadContent);
+
+    const toggleLanguage = () => {
+        setLanguage(language === 'en' ? 'zh' : 'en');
+    };
+
+    return (
+        <div className="flex flex-col h-screen bg-[#1a1a1a] text-gray-200 font-sans">
+            <header className="flex items-center justify-between p-3 border-b border-gray-700 shadow-md flex-shrink-0 z-10">
+                <div className="flex items-center gap-3">
+                    <button
+                        onClick={toggleSidebar}
+                        className="p-2 rounded-md hover:bg-gray-700 transition-colors"
+                        aria-label="Toggle history"
+                    >
+                        <PanelLeft size={20} />
+                    </button>
+                    <BotMessageSquare className="text-indigo-400" size={32} />
+                    <h1 className="text-xl font-bold text-gray-100">{t('appName')}</h1>
+                </div>
+                <div className="flex items-center gap-4">
+                     <div className="flex items-center gap-2">
+                        <span className="text-sm text-gray-400">{t('apiStatus')}</span>
+                        {chat.isApiKeySet ? (
+                            <div className="w-3 h-3 bg-green-500 rounded-full" title={t('apiKeySet')}></div>
+                        ) : (
+                            <div className="w-3 h-3 bg-red-500 rounded-full" title={t('apiKeyMissing')}></div>
+                        )}
+                     </div>
+                     <button
+                        onClick={chat.startNewConversation}
+                        className="flex items-center gap-1.5 p-2 rounded-md hover:bg-gray-700 transition-colors"
+                        aria-label={t('newChat')}
+                        disabled={chat.isLoading}
+                     >
+                        <FilePlus2 size={20}/>
+                     </button>
+                     <button
+                        onClick={toggleLanguage}
+                        className="flex items-center gap-1.5 p-2 rounded-md hover:bg-gray-700 transition-colors"
+                        aria-label="Toggle language"
+                    >
+                        <Languages size={20} />
+                        <span className="text-sm font-semibold uppercase">{language === 'en' ? 'ZH' : 'EN'}</span>
+                    </button>
+                    <button
+                        onClick={() => setIsSettingsOpen(true)}
+                        className="p-2 rounded-md hover:bg-gray-700 transition-colors"
+                        aria-label={t('settings')}
+                    >
+                        <Settings size={20} />
+                    </button>
+                </div>
+            </header>
+            
+            <div className="flex flex-grow overflow-hidden">
+                <HistorySidebar
+                    isOpen={isSidebarOpen}
+                    conversations={chat.conversations}
+                    currentConversationId={chat.currentConversationId}
+                    isLoading={chat.isLoading}
+                    onNewConversation={chat.startNewConversation}
+                    onSwitchConversation={chat.switchConversation}
+                    onDeleteConversation={chat.deleteConversation}
+                    onRenameConversation={chat.renameConversation}
+                />
+                <main className={`flex-grow flex ${isNotepadFullScreen ? 'flex-col' : 'flex-row'} overflow-hidden`}>
+                    <div 
+                        className={`flex flex-col ${isNotepadFullScreen ? 'hidden' : ''}`} 
+                        style={{ width: `calc(${panelWidth}px - 2px)`}}
+                    >
+                        <div className="flex items-center gap-3 p-3 border-b border-gray-700 bg-gray-800/50">
+                            <BrainCircuit size={20} className="text-blue-400" />
+                            <h2 className="text-lg font-semibold">{t('cognito')}</h2>
+                            <span className="text-gray-400 font-mono text-sm">&lt;=&gt;</span>
+                            <MessageSquareQuote size={20} className="text-purple-400" />
+                            <h2 className="text-lg font-semibold">{t('muse')}</h2>
+                        </div>
+
+                        <div className="flex-grow overflow-y-auto p-4 space-y-4">
+                            {chat.discussionLog.map((msg) => (
+                                <MessageBubble
+                                    key={msg.id}
+                                    message={msg}
+                                    onRetry={
+                                      chat.failedStepInfo && chat.failedStepInfo.id === msg.id 
+                                      ? chat.handleRetryFailedStep 
+                                      : undefined
+                                    }
+                                />
+                            ))}
+                        </div>
+                        
+                        <div className="p-4 border-t border-gray-700">
+                           {chat.isLoading && (
+                                <div className="flex justify-center mb-2">
+                                    <button
+                                        onClick={chat.cancelGeneration}
+                                        className="flex items-center gap-2 px-4 py-2 text-sm bg-gray-600 hover:bg-red-700/80 rounded-md transition-colors"
+                                    >
+                                        <Square size={16} />
+                                        {t('stopGeneration')}
+                                    </button>
+                                </div>
+                            )}
+                            <ChatInput
+                                onSubmit={chat.handleUserSubmit}
+                                isLoading={chat.isLoading}
+                                isApiKeySet={chat.isApiKeySet}
+                            />
+                        </div>
+                    </div>
+                    
+                    {!isNotepadFullScreen && (
+                        <div
+                            className="w-1.5 cursor-col-resize bg-gray-700 hover:bg-indigo-500 transition-colors"
+                            onMouseDown={handleMouseDown}
+                        />
+                    )}
+
+                    <div className={`flex flex-col flex-grow ${isResizing ? 'pointer-events-none' : ''}`}>
+                        <div className="flex items-center gap-3 p-3 border-b border-gray-700 bg-gray-800/50">
+                           <FileText size={20} className="text-green-400" />
+                           <h2 className="text-lg font-semibold">{t('notepadPanelTitle')}</h2>
+                        </div>
+                        <Notepad 
+                            content={chat.notepadContent}
+                            onContentChange={notepad.updateNotepadContent}
+                            undo={notepad.undo}
+                            redo={notepad.redo}
+                            canUndo={notepad.canUndo}
+                            canRedo={notepad.canRedo}
+                            isFullScreen={isNotepadFullScreen}
+                            onToggleFullScreen={toggleNotepadFullScreen}
+                        />
+                    </div>
+                </main>
+            </div>
+
+
+            {isSettingsOpen && (
+                <SettingsModal
+                    onClose={() => setIsSettingsOpen(false)}
+                    settings={chat.settings}
+                    onSettingsChange={chat.setSettings}
+                />
+            )}
+        </div>
+    );
+};
+
+export default App;

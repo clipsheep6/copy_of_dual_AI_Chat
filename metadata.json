@@ -1,0 +1,5 @@
+{
+  "name": "Dual AI Chat",
+  "description": "A chat application where two AI personas, Cognito (logical) and Muse (skeptical), debate user queries in a shared notepad to generate more comprehensive and reliable answers, simulating critical thinking.",
+  "requestFramePermissions": []
+}
