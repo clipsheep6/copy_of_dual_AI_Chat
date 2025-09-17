@@ -2,12 +2,9 @@ import React, { useState, useCallback, useEffect } from 'react';
 
 export const useAppUI = () => {
     const [isSettingsOpen, setIsSettingsOpen] = useState(false);
-    const [isSidebarOpen, setIsSidebarOpen] = useState(true);
     
-    // Calculate initial panel width once, assuming sidebar is open (256px).
     const [panelWidth, setPanelWidth] = useState(() => {
-        const sidebarWidth = 256;
-        const containerWidth = window.innerWidth - sidebarWidth;
+        const containerWidth = window.innerWidth;
         return Math.max(300, containerWidth / 2);
     });
 
@@ -25,18 +22,17 @@ export const useAppUI = () => {
 
     const handleMouseMove = useCallback((e: MouseEvent) => {
         if (isResizing) {
-            const sidebarWidth = isSidebarOpen ? 256 : 0; // w-64 is 16rem, assuming 1rem = 16px
-            const newWidth = e.clientX - sidebarWidth;
+            const newWidth = e.clientX;
             
             const minWidth = 300;
-            const containerWidth = window.innerWidth - sidebarWidth;
+            const containerWidth = window.innerWidth;
             const maxWidth = containerWidth - 300; // Leave 300px for the other panel
             
             if (newWidth > minWidth && newWidth < maxWidth) {
                  setPanelWidth(newWidth);
             }
         }
-    }, [isResizing, isSidebarOpen]);
+    }, [isResizing]);
 
     useEffect(() => {
         if (isResizing) {
@@ -57,10 +53,6 @@ export const useAppUI = () => {
         setIsNotepadFullScreen(prev => !prev);
     };
 
-    const toggleSidebar = () => {
-        setIsSidebarOpen(prev => !prev);
-    };
-
     return {
         isSettingsOpen,
         setIsSettingsOpen,
@@ -69,7 +61,5 @@ export const useAppUI = () => {
         handleMouseDown,
         isNotepadFullScreen,
         toggleNotepadFullScreen,
-        isSidebarOpen,
-        toggleSidebar,
     };
 };

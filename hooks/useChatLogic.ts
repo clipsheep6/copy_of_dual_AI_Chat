@@ -1,4 +1,4 @@
-import { useState, useCallback, useEffect, useMemo, useRef } from 'react';
+import { useState, useCallback, useEffect, useRef } from 'react';
 import type { AppSettings, ChatMessage, FailedStepPayload, Conversation } from '../types';
 import { MessageSender, MessagePurpose, DiscussionMode, ApiProvider } from '../types';
 import { generateResponse } from '../services/apiService';
@@ -34,91 +34,31 @@ const defaultSettings: AppSettings = {
     museSystemPrompt: MUSE_SYSTEM_PROMPT_HEADER,
 };
 
-const CONVERSATIONS_KEY = 'dual-ai-chat-conversations';
-
-
 export const useChatLogic = ({ initialNotepadContent }: ChatLogicProps) => {
-    const [conversations, setConversations] = useState<Conversation[]>([]);
-    const [currentConversationId, setCurrentConversationId] = useState<string | null>(null);
+    const [currentConversation, setCurrentConversation] = useState<Conversation | null>(null);
     const [isLoading, setIsLoading] = useState(false);
     const [failedStepInfo, setFailedStepInfo] = useState<FailedStepPayload | null>(null);
     const [settings, setSettings] = useState<AppSettings>(defaultSettings);
     const abortControllerRef = useRef<AbortController | null>(null);
     
-    const createNewConversation = useCallback((title: string = "New Chat"): Conversation => ({
+    const createNewConversation = useCallback((): Conversation => ({
         id: self.crypto.randomUUID(),
-        title,
+        title: "New Chat",
         createdAt: new Date().toISOString(),
         discussionLog: [],
         notepadContent: initialNotepadContent,
     }), [initialNotepadContent]);
 
-    // Effect for initial load from localStorage
+    // Effect for initial load
     useEffect(() => {
-        try {
-            const saved = localStorage.getItem(CONVERSATIONS_KEY);
-            if (saved) {
-                const savedConvos: Conversation[] = JSON.parse(saved);
-                if (savedConvos.length > 0) {
-                    setConversations(savedConvos);
-                    setCurrentConversationId(savedConvos[0].id); // Select the most recent one
-                    return;
-                }
-            }
-        } catch (error) {
-            console.error("Failed to load conversations from localStorage", error);
+        if (!currentConversation) {
+            setCurrentConversation(createNewConversation());
         }
-        // If nothing loaded, start fresh
-        const newConvo = createNewConversation();
-        setConversations([newConvo]);
-        setCurrentConversationId(newConvo.id);
-    }, [createNewConversation]);
+    }, [createNewConversation, currentConversation]);
 
-    // Effect for saving changes to localStorage
-    useEffect(() => {
-        if (conversations.length > 0) {
-            // Sort conversations by date before saving, so the newest is always first
-            const sortedConvos = [...conversations].sort((a, b) => new Date(b.createdAt).getTime() - new Date(a.createdAt).getTime());
-            localStorage.setItem(CONVERSATIONS_KEY, JSON.stringify(sortedConvos));
-        } else {
-             // If all conversations are deleted, we clear the storage.
-             // A new one will be created by the state guardian useEffect.
-            localStorage.removeItem(CONVERSATIONS_KEY);
-        }
-    }, [conversations]);
-
-    // State Guardian Effect: Ensures the application is always in a valid state.
-    useEffect(() => {
-        // Guard 1: If conversations list is empty, create a new one.
-        if (conversations.length === 0 && !isLoading) { // Check !isLoading to avoid race conditions during initial load
-            const newConvo = createNewConversation();
-            setConversations([newConvo]);
-            setCurrentConversationId(newConvo.id);
-            return; // Exit early
-        }
-
-        // Guard 2: If the active conversation ID is invalid or doesn't exist, select a new one.
-        const activeConvoExists = conversations.some(c => c.id === currentConversationId);
-        if (!activeConvoExists && conversations.length > 0) {
-            const sortedConvos = [...conversations].sort((a, b) => new Date(b.createdAt).getTime() - new Date(a.createdAt).getTime());
-            setCurrentConversationId(sortedConvos[0].id);
-        }
-    }, [conversations, currentConversationId, isLoading, createNewConversation]);
-
-    const currentConversation = useMemo(() => {
-        return conversations.find(c => c.id === currentConversationId);
-    }, [conversations, currentConversationId]);
 
     const discussionLog = currentConversation?.discussionLog || [];
     const notepadContent = currentConversation?.notepadContent || '';
-
-    const updateCurrentConversation = useCallback((updater: (convo: Conversation) => Conversation) => {
-        setConversations(prev =>
-            prev.map(c =>
-                c.id === currentConversationId ? updater(c) : c
-            )
-        );
-    }, [currentConversationId]);
 
     const isApiKeySet = useCallback(() => {
         switch(settings.currentProvider) {
@@ -140,24 +80,22 @@ export const useChatLogic = ({ initialNotepadContent }: ChatLogicProps) => {
             timestamp: new Date().toISOString(),
         };
 
-        const isFirstUserMessage = discussionLog.length === 0 && message.sender === MessageSender.User;
-        const newTitle = isFirstUserMessage ? message.text.substring(0, 30) + (message.text.length > 30 ? '...' : '') : currentConversation?.title;
+        setCurrentConversation(convo => {
+            if (!convo) return null;
+            
+            const isFirstUserMessage = convo.discussionLog.length === 0 && message.sender === MessageSender.User;
+            const newTitle = isFirstUserMessage ? message.text.substring(0, 30) + (message.text.length > 30 ? '...' : '') : convo.title;
 
-        updateCurrentConversation(convo => {
             const updatedConvo = {
                 ...convo,
-                // Remove any leftover loading messages before adding the new one
                 discussionLog: [...convo.discussionLog.filter(m => m.text !== '...'), newMessage],
-                createdAt: new Date().toISOString() // Bump timestamp to move to top
+                title: newTitle
             };
-            if (isFirstUserMessage && newTitle) {
-                updatedConvo.title = newTitle;
-            }
             return updatedConvo;
         });
 
         return newMessage;
-    }, [discussionLog.length, currentConversation?.title, updateCurrentConversation]);
+    }, []);
 
     const commonAIStepExecution = useCallback(async (
         prompt: string, 
@@ -187,18 +125,21 @@ export const useChatLogic = ({ initialNotepadContent }: ChatLogicProps) => {
         
         const durationMs = Date.now() - startTime;
         
-        updateCurrentConversation(convo => ({
-            ...convo,
-            notepadContent: newNotepadContent,
-            discussionLog: convo.discussionLog.map(msg => 
-                msg.id === messageId 
-                ? { ...msg, text: finalSpokenResponse, durationMs } 
-                : msg
-            )
-        }));
+        setCurrentConversation(convo => {
+            if (!convo) return null;
+            return {
+                ...convo,
+                notepadContent: newNotepadContent,
+                discussionLog: convo.discussionLog.map(msg => 
+                    msg.id === messageId 
+                    ? { ...msg, text: finalSpokenResponse, durationMs } 
+                    : msg
+                )
+            }
+        });
 
         return { spokenResponse: finalSpokenResponse, newNotepadContent, durationMs, hasFinishTag };
-    }, [settings, updateCurrentConversation]);
+    }, [settings]);
 
 
     const runDebate = useCallback(async (userMessage: ChatMessage) => {
@@ -237,7 +178,7 @@ export const useChatLogic = ({ initialNotepadContent }: ChatLogicProps) => {
                     const speaker = MessageSender.Cognito;
                     console.error(`Error during ${speaker}'s turn:`, error);
                     const errorMessage = error instanceof Error ? error.message : "An unknown API error occurred.";
-                    updateCurrentConversation(c => ({...c, discussionLog: c.discussionLog.map(m => m.id === cognitoMsg.id ? {...m, text: `Error: ${errorMessage}`, purpose: MessagePurpose.Error } : m)}));
+                    setCurrentConversation(c => c ? {...c, discussionLog: c.discussionLog.map(m => m.id === cognitoMsg.id ? {...m, text: `Error: ${errorMessage}`, purpose: MessagePurpose.Error } : m)} : null);
                     setFailedStepInfo({ id: cognitoMsg.id, prompt: promptCognito, speaker });
                     throw error;
                 }
@@ -263,7 +204,7 @@ export const useChatLogic = ({ initialNotepadContent }: ChatLogicProps) => {
                     const speaker = MessageSender.Muse;
                     console.error(`Error during ${speaker}'s turn:`, error);
                     const errorMessage = error instanceof Error ? error.message : "An unknown API error occurred.";
-                    updateCurrentConversation(c => ({...c, discussionLog: c.discussionLog.map(m => m.id === museMsg.id ? {...m, text: `Error: ${errorMessage}`, purpose: MessagePurpose.Error } : m)}));
+                    setCurrentConversation(c => c ? {...c, discussionLog: c.discussionLog.map(m => m.id === museMsg.id ? {...m, text: `Error: ${errorMessage}`, purpose: MessagePurpose.Error } : m)} : null);
                     setFailedStepInfo({ id: museMsg.id, prompt: promptMuse, speaker });
                     throw error;
                 }
@@ -283,16 +224,18 @@ export const useChatLogic = ({ initialNotepadContent }: ChatLogicProps) => {
         } finally {
             setIsLoading(false);
             abortControllerRef.current = null;
-            // Clean up any remaining loading messages if the process was stopped
-            updateCurrentConversation(convo => ({
-                ...convo,
-                discussionLog: convo.discussionLog.filter(m => m.text !== '...')
-            }));
+            setCurrentConversation(convo => {
+                if (!convo) return null;
+                return {
+                    ...convo,
+                    discussionLog: convo.discussionLog.filter(m => m.text !== '...')
+                }
+            });
         }
-    }, [discussionLog, notepadContent, settings, addMessage, commonAIStepExecution, updateCurrentConversation]);
+    }, [discussionLog, notepadContent, settings, addMessage, commonAIStepExecution]);
     
     const handleUserSubmit = useCallback((text: string, image?: string) => {
-        if (!currentConversationId || isLoading) return;
+        if (!currentConversation || isLoading) return;
         if (!isApiKeySet()) {
             addMessage({
                 sender: MessageSender.System,
@@ -308,7 +251,7 @@ export const useChatLogic = ({ initialNotepadContent }: ChatLogicProps) => {
             image,
         });
         runDebate(userMessage);
-    }, [runDebate, isApiKeySet, addMessage, currentConversationId, isLoading]);
+    }, [runDebate, isApiKeySet, addMessage, currentConversation, isLoading]);
 
     const handleRetryFailedStep = useCallback(async () => {
         if (!failedStepInfo) return;
@@ -317,7 +260,7 @@ export const useChatLogic = ({ initialNotepadContent }: ChatLogicProps) => {
         const signal = abortControllerRef.current.signal;
         const { id, prompt, speaker } = failedStepInfo;
 
-        updateCurrentConversation(c => ({...c, discussionLog: c.discussionLog.map(m => m.id === id ? {...m, text: '...', purpose: speaker === MessageSender.Cognito ? MessagePurpose.CognitoToMuse : MessagePurpose.MuseToCognito } : m)}));
+        setCurrentConversation(c => c ? {...c, discussionLog: c.discussionLog.map(m => m.id === id ? {...m, text: '...', purpose: speaker === MessageSender.Cognito ? MessagePurpose.CognitoToMuse : MessagePurpose.MuseToCognito } : m)} : null);
         
         try {
             await commonAIStepExecution(prompt, id, notepadContent, signal, speaker);
@@ -330,7 +273,7 @@ export const useChatLogic = ({ initialNotepadContent }: ChatLogicProps) => {
             setIsLoading(false);
             abortControllerRef.current = null;
         }
-    }, [failedStepInfo, commonAIStepExecution, addMessage, notepadContent, updateCurrentConversation]);
+    }, [failedStepInfo, commonAIStepExecution, addMessage, notepadContent]);
 
     const cancelGeneration = useCallback(() => {
         if (abortControllerRef.current) {
@@ -346,38 +289,15 @@ export const useChatLogic = ({ initialNotepadContent }: ChatLogicProps) => {
 
     const startNewConversation = () => {
         cancelGeneration();
-        const newConvo = createNewConversation();
-        setConversations(prev => [newConvo, ...prev]);
-        setCurrentConversationId(newConvo.id);
+        setCurrentConversation(createNewConversation());
         setFailedStepInfo(null);
     };
 
-    const switchConversation = (id: string) => {
-        if (id !== currentConversationId) {
-            cancelGeneration();
-            setCurrentConversationId(id);
-            setFailedStepInfo(null);
-        }
-    };
-
-    const deleteConversation = useCallback((id: string) => {
-        setConversations(prev => prev.filter(c => c.id !== id));
-    }, []);
-
-    const renameConversation = (id: string, newTitle: string) => {
-        if (!newTitle.trim()) return;
-        setConversations(prev =>
-            prev.map(c => c.id === id ? { ...c, title: newTitle.trim() } : c)
-        );
-    };
-    
     const updateCurrentNotepadContent = (content: string) => {
-        updateCurrentConversation(c => ({ ...c, notepadContent: content }));
+        setCurrentConversation(c => c ? { ...c, notepadContent: content } : null);
     };
 
     return {
-        conversations,
-        currentConversationId,
         discussionLog,
         notepadContent,
         isLoading,
@@ -388,9 +308,6 @@ export const useChatLogic = ({ initialNotepadContent }: ChatLogicProps) => {
         handleUserSubmit,
         handleRetryFailedStep,
         startNewConversation,
-        switchConversation,
-        deleteConversation,
-        renameConversation,
         updateCurrentNotepadContent,
         cancelGeneration,
     };
