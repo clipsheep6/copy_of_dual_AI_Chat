@@ -1,11 +1,12 @@
 
-import React, { useMemo } from 'react';
+import React, { useMemo, useState, useEffect } from 'react';
 import { Settings, BotMessageSquare, BrainCircuit, MessageSquareQuote, FileText, Languages, FilePlus2, Square } from 'lucide-react';
 
 import { ChatInput } from './components/ChatInput';
 import { MessageBubble } from './components/MessageBubble';
 import { Notepad } from './components/Notepad';
 import { SettingsModal } from './components/SettingsModal';
+import { InfoSecurityModal } from './components/InfoSecurityModal';
 import { useAppUI } from './hooks/useAppUI';
 import { useNotepadLogic } from './hooks/useNotepadLogic';
 import { useChatLogic } from './hooks/useChatLogic';
@@ -13,6 +14,20 @@ import { useLocalization } from './hooks/useLocalization';
 
 const App: React.FC = () => {
     const { t, language, setLanguage } = useLocalization();
+    const [showSecurityModal, setShowSecurityModal] = useState(false);
+
+    useEffect(() => {
+        const hasAgreed = localStorage.getItem('infoSecurityAgreed') === 'true';
+        if (!hasAgreed) {
+            setShowSecurityModal(true);
+        }
+    }, []);
+
+    const handleAgreeToSecurity = () => {
+        localStorage.setItem('infoSecurityAgreed', 'true');
+        setShowSecurityModal(false);
+    };
+
     const {
         isSettingsOpen,
         setIsSettingsOpen,
@@ -35,6 +50,7 @@ const App: React.FC = () => {
 
     return (
         <div className="flex flex-col h-screen bg-[#1a1a1a] text-gray-200 font-sans">
+            {showSecurityModal && <InfoSecurityModal onAgree={handleAgreeToSecurity} />}
             <header className="flex items-center justify-between p-3 border-b border-gray-700 shadow-md flex-shrink-0 z-10">
                 <div className="flex items-center gap-3">
                     <BotMessageSquare className="text-indigo-400" size={32} />

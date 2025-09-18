@@ -72,6 +72,18 @@ export interface Locale {
     rename: string;
     delete: string;
     deleteConfirmation: string;
+    // Security Modal
+    securityModalTitle: string;
+    securityModalP1: string;
+    securityModalP2: string;
+    securityModalL1Title: string;
+    securityModalL1Desc: string;
+    securityModalL2Title: string;
+    securityModalL2Desc: string;
+    securityModalL3Title: string;
+    securityModalL3Desc: string;
+    securityModalP3: string;
+    securityModalAgree: string;
 }
 
 export const locales: { [key: string]: Locale } = {
@@ -141,6 +153,17 @@ export const locales: { [key: string]: Locale } = {
         rename: "Rename chat",
         delete: "Delete chat",
         deleteConfirmation: "Are you sure you want to delete '{title}'? This action cannot be undone.",
+        securityModalTitle: "Information Security & User Privacy Notice",
+        securityModalP1: "Welcome to the Dual AI Chat demonstration tool. This is a public educational demo application designed to showcase AI's collaborative capabilities in system design and critical thinking.",
+        securityModalP2: "Please strictly adhere to the following information security requirements:",
+        securityModalL1Title: "Prohibition of Sensitive Data:",
+        securityModalL1Desc: "This tool is a public demo application. It is strictly forbidden to enter or upload any form of company-internal proprietary information, trade secrets, undisclosed technical data, source code, or any other non-public sensitive data in any input area.",
+        securityModalL2Title: "Data Processing and Visibility:",
+        securityModalL2Desc: "All information you enter will be sent to third-party AI services (e.g., Google Gemini) for processing. We cannot guarantee the confidentiality of this data, and your input may be used for service improvement.",
+        securityModalL3Title: "Personal Responsibility:",
+        securityModalL3Desc: "You and your organization will be solely responsible for any data leakage, intellectual property loss, or any other damages resulting from your violation of this notice by entering sensitive information.",
+        securityModalP3: "By clicking 'Agree' and continuing, you acknowledge that you have read, fully understood, and agree to comply with all of the above terms.",
+        securityModalAgree: "I Have Read and Agree",
     },
     zh: {
         appName: "两小儿辩日",
@@ -208,5 +231,16 @@ export const locales: { [key: string]: Locale } = {
         rename: "重命名对话",
         delete: "删除对话",
         deleteConfirmation: "您确定要删除“{title}”吗？此操作无法撤销。",
+        securityModalTitle: "信息安全与用户隐私提示",
+        securityModalP1: "欢迎使用“两小儿辩日”AI辩论演示工具。这是一个公开的教学演示应用，旨在展示AI在复杂问题上的协作思辨能力。",
+        securityModalP2: "请严格遵守以下信息安全要求：",
+        securityModalL1Title: "严禁输入敏感数据：",
+        securityModalL1Desc: "此工具为公开的演示应用。严禁在任何输入区域输入或上传任何形式的公司内部专有信息、商业机密、未公开的技术资料、源代码、或任何其他非公开的敏感数据。",
+        securityModalL2Title: "数据处理与可见性：",
+        securityModalL2Desc: "您输入的所有信息都将被发送给第三方AI服务（例如 Google Gemini）进行处理。我们无法保证这些数据的机密性，并且您输入的内容可能被用于服务改进。",
+        securityModalL3Title: "责任自负：",
+        securityModalL3Desc: "因您违反本提示，输入敏感信息而导致的数据泄露、知识产权损失或任何其他损害，责任将由您个人和所属组织承担。",
+        securityModalP3: "点击“同意”并继续，即表示您已完整阅读、充分理解并同意遵守以上所有条款。",
+        securityModalAgree: "我已阅读并同意",
     }
 };
