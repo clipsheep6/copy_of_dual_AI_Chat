@@ -1,3 +1,4 @@
+
 import React, { useMemo } from 'react';
 import { Settings, BotMessageSquare, BrainCircuit, MessageSquareQuote, FileText, Languages, FilePlus2, Square } from 'lucide-react';
 
@@ -37,7 +38,14 @@ const App: React.FC = () => {
             <header className="flex items-center justify-between p-3 border-b border-gray-700 shadow-md flex-shrink-0 z-10">
                 <div className="flex items-center gap-3">
                     <BotMessageSquare className="text-indigo-400" size={32} />
-                    <h1 className="text-xl font-bold text-gray-100">{t('appName')}</h1>
+                     {language === 'zh' ? (
+                        <div className="flex items-baseline gap-2">
+                            <h1 className="text-xl font-bold text-gray-100">{t('appName')}</h1>
+                            <span className="text-sm text-gray-400 font-medium">Dual AI Chat</span>
+                        </div>
+                    ) : (
+                        <h1 className="text-xl font-bold text-gray-100">{t('appName')}</h1>
+                    )}
                 </div>
                 <div className="flex items-center gap-4">
                      <div className="flex items-center gap-2">
@@ -74,10 +82,24 @@ const App: React.FC = () => {
                     >
                         <div className="flex items-center gap-3 p-3 border-b border-gray-700 bg-gray-800/50">
                             <BrainCircuit size={20} className="text-blue-400" />
-                            <h2 className="text-lg font-semibold">{t('cognito')}</h2>
+                            {language === 'zh' ? (
+                                <div className="flex items-baseline gap-1.5">
+                                    <h2 className="text-lg font-semibold">{t('cognito')}</h2>
+                                    <span className="text-xs text-gray-400 font-medium">(Cognito)</span>
+                                </div>
+                            ) : (
+                                <h2 className="text-lg font-semibold">{t('cognito')}</h2>
+                            )}
                             <span className="text-gray-400 font-mono text-sm">&lt;=&gt;</span>
                             <MessageSquareQuote size={20} className="text-purple-400" />
-                            <h2 className="text-lg font-semibold">{t('muse')}</h2>
+                             {language === 'zh' ? (
+                                <div className="flex items-baseline gap-1.5">
+                                    <h2 className="text-lg font-semibold">{t('muse')}</h2>
+                                    <span className="text-xs text-gray-400 font-medium">(Muse)</span>
+                                </div>
+                            ) : (
+                                <h2 className="text-lg font-semibold">{t('muse')}</h2>
+                            )}
                         </div>
 
                         <div className="flex-grow overflow-y-auto p-4 space-y-4">

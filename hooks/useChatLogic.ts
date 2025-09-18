@@ -40,6 +40,7 @@ export const useChatLogic = ({ initialNotepadContent }: ChatLogicProps) => {
     const [failedStepInfo, setFailedStepInfo] = useState<FailedStepPayload | null>(null);
     const [settings, setSettings] = useState<AppSettings>(defaultSettings);
     const abortControllerRef = useRef<AbortController | null>(null);
+    const prevInitialNotepadContentRef = useRef<string>(initialNotepadContent);
     
     const createNewConversation = useCallback((): Conversation => ({
         id: self.crypto.randomUUID(),
@@ -55,6 +56,29 @@ export const useChatLogic = ({ initialNotepadContent }: ChatLogicProps) => {
             setCurrentConversation(createNewConversation());
         }
     }, [createNewConversation, currentConversation]);
+
+    // Effect to handle language change for the initial notepad content
+    useEffect(() => {
+        const prevContent = prevInitialNotepadContentRef.current;
+        
+        // If the translated initial content has changed AND
+        // the current notepad content is the same as the *previous* initial content
+        if (initialNotepadContent !== prevContent && currentConversation?.notepadContent === prevContent) {
+             setCurrentConversation(convo => {
+                if (!convo) return null;
+                // Update the notepad with the new translated content
+                const updatedConvo = {
+                    ...convo,
+                    notepadContent: initialNotepadContent
+                };
+                return updatedConvo;
+            });
+        }
+        
+        // Update the ref to the current value for the next render cycle
+        prevInitialNotepadContentRef.current = initialNotepadContent;
+
+    }, [initialNotepadContent, currentConversation]);
 
 
     const discussionLog = currentConversation?.discussionLog || [];
@@ -292,6 +316,8 @@ export const useChatLogic = ({ initialNotepadContent }: ChatLogicProps) => {
         setCurrentConversation(createNewConversation());
         setFailedStepInfo(null);
     };
+
+
 
     const updateCurrentNotepadContent = (content: string) => {
         setCurrentConversation(c => c ? { ...c, notepadContent: content } : null);
