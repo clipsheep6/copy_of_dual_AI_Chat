@@ -2,7 +2,7 @@ import { useState, useCallback, useEffect, useRef } from 'react';
 import type { AppSettings, ChatMessage, FailedStepPayload, Conversation } from '../types';
 import { MessageSender, MessagePurpose, DiscussionMode, ApiProvider } from '../types';
 import { generateResponse } from '../services/apiService';
-import { applyNotepadModifications, parseAIResponse } from '../utils/appUtils';
+import { applyNotepadModifications, parseAIResponse, generateUUID } from '../utils/appUtils';
 import { COGNITO_SYSTEM_PROMPT_HEADER, MUSE_SYSTEM_PROMPT_HEADER, DISCUSSION_COMPLETE_TAG, NOTEPAD_INSTRUCTION_PROMPT_PART, AI_DRIVEN_DISCUSSION_INSTRUCTION_PROMPT_PART } from '../constants';
 
 interface ChatLogicProps {
@@ -43,7 +43,7 @@ export const useChatLogic = ({ initialNotepadContent }: ChatLogicProps) => {
     const prevInitialNotepadContent = useRef<string>(initialNotepadContent);
     
     const createNewConversation = useCallback((): Conversation => ({
-        id: self.crypto.randomUUID(),
+        id: generateUUID(),
         title: "New Chat",
         createdAt: new Date().toISOString(),
         discussionLog: [],
@@ -91,7 +91,7 @@ export const useChatLogic = ({ initialNotepadContent }: ChatLogicProps) => {
     const addMessage = useCallback((message: Omit<ChatMessage, 'id' | 'timestamp'>): ChatMessage => {
         const newMessage: ChatMessage = {
             ...message,
-            id: self.crypto.randomUUID(),
+            id: generateUUID(),
             timestamp: new Date().toISOString(),
         };
 
