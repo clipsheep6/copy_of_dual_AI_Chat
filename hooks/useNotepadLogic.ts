@@ -17,7 +17,7 @@ export const useNotepadLogic = (
             setHistory(newHistory);
             setHistoryIndex(newHistory.length - 1);
         }
-    }, [content]);
+    }, [content, history, historyIndex]);
 
     // This is called when the user types in the textarea
     const updateNotepadContent = useCallback((newContent: string) => {

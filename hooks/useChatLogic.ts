@@ -40,7 +40,7 @@ export const useChatLogic = ({ initialNotepadContent }: ChatLogicProps) => {
     const [failedStepInfo, setFailedStepInfo] = useState<FailedStepPayload | null>(null);
     const [settings, setSettings] = useState<AppSettings>(defaultSettings);
     const abortControllerRef = useRef<AbortController | null>(null);
-    const prevInitialNotepadContentRef = useRef<string>(initialNotepadContent);
+    const prevInitialNotepadContent = useRef<string>(initialNotepadContent);
     
     const createNewConversation = useCallback((): Conversation => ({
         id: self.crypto.randomUUID(),
@@ -57,29 +57,20 @@ export const useChatLogic = ({ initialNotepadContent }: ChatLogicProps) => {
         }
     }, [createNewConversation, currentConversation]);
 
-    // Effect to handle language change for the initial notepad content
+    // Effect to handle language changes for the initial notepad content
     useEffect(() => {
-        const prevContent = prevInitialNotepadContentRef.current;
-        
-        // If the translated initial content has changed AND
-        // the current notepad content is the same as the *previous* initial content
-        if (initialNotepadContent !== prevContent && currentConversation?.notepadContent === prevContent) {
-             setCurrentConversation(convo => {
-                if (!convo) return null;
-                // Update the notepad with the new translated content
-                const updatedConvo = {
-                    ...convo,
-                    notepadContent: initialNotepadContent
-                };
-                return updatedConvo;
-            });
+        // If the notepad content matches the *previous* default text, it means it's unmodified.
+        // In this case, we can safely update it to the new default text for the new language.
+        if (
+            currentConversation &&
+            currentConversation.notepadContent === prevInitialNotepadContent.current &&
+            currentConversation.notepadContent !== initialNotepadContent // Avoids redundant updates
+        ) {
+            setCurrentConversation(c => c ? { ...c, notepadContent: initialNotepadContent } : null);
         }
-        
-        // Update the ref to the current value for the next render cycle
-        prevInitialNotepadContentRef.current = initialNotepadContent;
-
+        // Update the ref for the next comparison.
+        prevInitialNotepadContent.current = initialNotepadContent;
     }, [initialNotepadContent, currentConversation]);
-
 
     const discussionLog = currentConversation?.discussionLog || [];
     const notepadContent = currentConversation?.notepadContent || '';
@@ -185,7 +176,7 @@ export const useChatLogic = ({ initialNotepadContent }: ChatLogicProps) => {
 
                 // --- Cognito's Turn ---
                 const cognitoMsg = addMessage({ sender: MessageSender.Cognito, text: '...', purpose: MessagePurpose.CognitoToMuse });
-                debateLog.push(cognitoMsg);
+                debateLog.push( cognitoMsg );
                 
                 const historyForCognito = debateLog.slice(0, -1).map(m => `${m.sender}: ${m.text}`).join('\n');
                 let promptCognito = `${settings.cognitoSystemPrompt}\n\n[DISCUSSION HISTORY]\n${historyForCognito}\n\n[USER QUERY]\n${userMessage.text}\n\n${NOTEPAD_INSTRUCTION_PROMPT_PART.replace('{notepadContent}', currentNotepad)}`;

@@ -6,17 +6,20 @@ interface ChatInputProps {
     onSubmit: (text: string, image?: string) => void;
     isLoading: boolean;
     isApiKeySet: boolean;
+    disabled?: boolean;
 }
 
-export const ChatInput: React.FC<ChatInputProps> = ({ onSubmit, isLoading, isApiKeySet }) => {
+export const ChatInput: React.FC<ChatInputProps> = ({ onSubmit, isLoading, isApiKeySet, disabled = false }) => {
     const { t } = useLocalization();
     const [text, setText] = useState('');
     const [image, setImage] = useState<string | null>(null);
     const fileInputRef = useRef<HTMLInputElement>(null);
+    
+    const finalDisabled = isLoading || !isApiKeySet || disabled;
 
     const handleSubmit = (e: React.FormEvent) => {
         e.preventDefault();
-        if ((text.trim() || image) && !isLoading && isApiKeySet) {
+        if ((text.trim() || image) && !finalDisabled) {
             onSubmit(text.trim(), image || undefined);
             setText('');
             setImage(null);
@@ -76,11 +79,15 @@ export const ChatInput: React.FC<ChatInputProps> = ({ onSubmit, isLoading, isApi
         e.stopPropagation();
     }, []);
 
-    const placeholderText = !isApiKeySet ? t('chatPlaceholderApiKeyMissing') : t('chatPlaceholder');
+    const placeholderText = !isApiKeySet 
+        ? t('chatPlaceholderApiKeyMissing') 
+        : disabled
+        ? t('chatPlaceholderAgreementMissing')
+        : t('chatPlaceholder');
 
     return (
         <form onSubmit={handleSubmit} className="relative" onDrop={onDrop} onDragOver={onDragOver}>
-            <div className="flex flex-col border border-gray-600 rounded-lg bg-gray-700/50 focus-within:ring-2 focus-within:ring-indigo-500 transition-shadow">
+            <div className={`flex flex-col border border-gray-600 rounded-lg bg-gray-700/50 focus-within:ring-2 focus-within:ring-indigo-500 transition-shadow ${finalDisabled ? 'opacity-60' : ''}`}>
                 {image && (
                     <div className="relative p-2">
                         <img src={image} alt="Preview" className="max-h-32 rounded-md object-contain" />
@@ -101,7 +108,7 @@ export const ChatInput: React.FC<ChatInputProps> = ({ onSubmit, isLoading, isApi
                     placeholder={placeholderText}
                     className="w-full bg-transparent p-3 resize-none focus:outline-none placeholder-gray-400 disabled:opacity-50"
                     rows={Math.min(10, text.split('\n').length + 1)}
-                    disabled={isLoading || !isApiKeySet}
+                    disabled={finalDisabled}
                 />
             </div>
             <div className="absolute right-2 bottom-2 flex items-center gap-2">
@@ -115,7 +122,7 @@ export const ChatInput: React.FC<ChatInputProps> = ({ onSubmit, isLoading, isApi
                 <button
                     type="button"
                     onClick={() => fileInputRef.current?.click()}
-                    disabled={isLoading || !isApiKeySet}
+                    disabled={finalDisabled}
                     className="p-2 text-gray-400 hover:text-white disabled:opacity-50"
                     aria-label="Attach file"
                 >
@@ -123,7 +130,7 @@ export const ChatInput: React.FC<ChatInputProps> = ({ onSubmit, isLoading, isApi
                 </button>
                 <button
                     type="submit"
-                    disabled={isLoading || !isApiKeySet || (!text.trim() && !image)}
+                    disabled={finalDisabled || (!text.trim() && !image)}
                     className="p-2 bg-indigo-600 text-white rounded-md hover:bg-indigo-700 disabled:bg-gray-500 disabled:cursor-not-allowed"
                     aria-label="Send message"
                 >

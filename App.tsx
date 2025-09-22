@@ -1,4 +1,5 @@
 
+
 import React, { useMemo, useState, useEffect } from 'react';
 import { Settings, BotMessageSquare, BrainCircuit, MessageSquareQuote, FileText, Languages, FilePlus2, Square } from 'lucide-react';
 
@@ -15,17 +16,11 @@ import { useLocalization } from './hooks/useLocalization';
 const App: React.FC = () => {
     const { t, language, setLanguage } = useLocalization();
     const [showSecurityModal, setShowSecurityModal] = useState(false);
-
-    useEffect(() => {
-        const hasAgreed = localStorage.getItem('infoSecurityAgreed') === 'true';
-        if (!hasAgreed) {
-            setShowSecurityModal(true);
-        }
-    }, []);
+    const [hasAgreedToSecurity, setHasAgreedToSecurity] = useState(false);
 
     const handleAgreeToSecurity = () => {
-        localStorage.setItem('infoSecurityAgreed', 'true');
         setShowSecurityModal(false);
+        setHasAgreedToSecurity(true);
     };
 
     const {
@@ -159,7 +154,26 @@ const App: React.FC = () => {
                                 onSubmit={chat.handleUserSubmit}
                                 isLoading={chat.isLoading}
                                 isApiKeySet={chat.isApiKeySet}
+                                disabled={!hasAgreedToSecurity}
                             />
+                            <div className="text-center text-xs text-gray-400 mt-2">
+                                <label className={`flex items-center justify-center gap-2 group ${hasAgreedToSecurity ? 'cursor-default' : 'cursor-pointer'}`}>
+                                    <input
+                                        type="checkbox"
+                                        checked={hasAgreedToSecurity}
+                                        disabled={hasAgreedToSecurity}
+                                        onChange={() => {
+                                            if (!hasAgreedToSecurity) {
+                                                setShowSecurityModal(true);
+                                            }
+                                        }}
+                                        className="form-checkbox h-4 w-4 text-indigo-600 bg-gray-800 border-gray-600 rounded focus:ring-indigo-500 disabled:opacity-75 disabled:cursor-not-allowed"
+                                    />
+                                    <span className={!hasAgreedToSecurity ? 'group-hover:underline' : ''}>
+                                        {hasAgreedToSecurity ? t('securityCheckboxLabelAgreed') : t('securityCheckboxLabel')}
+                                    </span>
+                                </label>
+                            </div>
                         </div>
                     </div>
                     

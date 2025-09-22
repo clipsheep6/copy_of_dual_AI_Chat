@@ -13,6 +13,7 @@ export interface Locale {
     // Chat Input
     chatPlaceholderApiKeyMissing: string;
     chatPlaceholder: string;
+    chatPlaceholderAgreementMissing: string;
     stopGeneration: string;
     generationStopped: string;
     // Message Bubble
@@ -84,6 +85,8 @@ export interface Locale {
     securityModalL3Desc: string;
     securityModalP3: string;
     securityModalAgree: string;
+    securityCheckboxLabel: string;
+    securityCheckboxLabelAgreed: string;
 }
 
 export const locales: { [key: string]: Locale } = {
@@ -99,6 +102,7 @@ export const locales: { [key: string]: Locale } = {
         chatHistory: "Chat History",
         chatPlaceholderApiKeyMissing: "Please set your API key in settings.",
         chatPlaceholder: "Type your message or drop an image...",
+        chatPlaceholderAgreementMissing: "Please agree to the security notice to begin.",
         stopGeneration: "Stop Generation",
         generationStopped: "Generation stopped by user.",
         errorMessage: "An error occurred.",
@@ -164,6 +168,8 @@ export const locales: { [key: string]: Locale } = {
         securityModalL3Desc: "You and your organization will be solely responsible for any data leakage, intellectual property loss, or any other damages resulting from your violation of this notice by entering sensitive information.",
         securityModalP3: "By clicking 'Agree' and continuing, you acknowledge that you have read, fully understood, and agree to comply with all of the above terms.",
         securityModalAgree: "I Have Read and Agree",
+        securityCheckboxLabel: "Please review and agree to the security notice to begin.",
+        securityCheckboxLabelAgreed: "You have agreed to the security notice.",
     },
     zh: {
         appName: "两小儿辩日",
@@ -177,6 +183,7 @@ export const locales: { [key: string]: Locale } = {
         chatHistory: "聊天历史",
         chatPlaceholderApiKeyMissing: "请在设置中填写您的API密钥。",
         chatPlaceholder: "输入消息或拖入图片...",
+        chatPlaceholderAgreementMissing: "请先同意信息安全条款再开始聊天。",
         stopGeneration: "停止生成",
         generationStopped: "已由用户停止生成。",
         errorMessage: "发生错误。",
@@ -242,5 +249,7 @@ export const locales: { [key: string]: Locale } = {
         securityModalL3Desc: "因您违反本提示，输入敏感信息而导致的数据泄露、知识产权损失或任何其他损害，责任将由您个人和所属组织承担。",
         securityModalP3: "点击“同意”并继续，即表示您已完整阅读、充分理解并同意遵守以上所有条款。",
         securityModalAgree: "我已阅读并同意",
+        securityCheckboxLabel: "请阅读并同意信息安全条款以开始使用。",
+        securityCheckboxLabelAgreed: "您已同意信息安全条款。",
     }
 };
