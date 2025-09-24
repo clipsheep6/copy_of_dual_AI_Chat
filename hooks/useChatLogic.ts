@@ -20,7 +20,7 @@ const defaultSettings: AppSettings = {
             mode: 'default',
         }
     },
-    openAIConfig: {
+    openAICompatibleConfig: {
         apiKey: '',
         baseUrl: '',
         model: 'gpt-4o',
@@ -55,13 +55,13 @@ export const useChatLogic = ({ initialNotepadContent }: ChatLogicProps) => {
     // Effect for determining the active API provider with fallback logic
     useEffect(() => {
         const isGeminiConfigured = !!(settings.geminiConfig.apiKey || process.env.API_KEY || settings.geminiConfig.baseUrl);
-        const isOpenAIConfigured = !!(settings.openAIConfig.apiKey && settings.openAIConfig.baseUrl);
+        const isOpenAICompatibleConfigured = !!(settings.openAICompatibleConfig.apiKey && settings.openAICompatibleConfig.baseUrl);
         const isOllamaConfigured = !!settings.ollamaConfig.baseUrl;
 
         if (isGeminiConfigured) {
             setActiveProvider('gemini');
-        } else if (isOpenAIConfigured) {
-            setActiveProvider('openai');
+        } else if (isOpenAICompatibleConfigured) {
+            setActiveProvider('openai-compatible');
         } else if (isOllamaConfigured) {
             setActiveProvider('ollama');
         } else {
@@ -326,6 +326,8 @@ export const useChatLogic = ({ initialNotepadContent }: ChatLogicProps) => {
     const updateCurrentNotepadContent = (content: string) => {
         setCurrentConversation(c => c ? { ...c, notepadContent: content } : null);
     };
+
+
 
     return {
         discussionLog,

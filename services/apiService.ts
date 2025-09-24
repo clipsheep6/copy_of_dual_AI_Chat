@@ -90,13 +90,13 @@ const generateGeminiResponse = async (prompt: string, settings: AppSettings, sig
     }
 };
 
-const generateOpenAIResponse = async (prompt: string, settings: AppSettings, signal: AbortSignal): Promise<string> => {
-    const { apiKey, baseUrl, model } = settings.openAIConfig;
+const generateOpenAICompatibleResponse = async (prompt: string, settings: AppSettings, signal: AbortSignal): Promise<string> => {
+    const { apiKey, baseUrl, model } = settings.openAICompatibleConfig;
     if (!apiKey || !baseUrl || !model) {
-        throw new Error("OpenAI API Key, Base URL, and Model must be configured.");
+        throw new Error("OpenAI-compatible API Key, Base URL, and Model must be configured.");
     }
     
-    const response = await fetch(`${baseUrl}/v1/chat/completions`, {
+    const response = await fetch(`${baseUrl.endsWith('/') ? baseUrl.slice(0,-1) : baseUrl}/v1/chat/completions`, {
         method: 'POST',
         headers: {
             'Content-Type': 'application/json',
@@ -112,7 +112,7 @@ const generateOpenAIResponse = async (prompt: string, settings: AppSettings, sig
 
     if (!response.ok) {
         const errorData = await response.json();
-        throw new Error(`OpenAI API Error: ${errorData.error?.message || response.statusText}`);
+        throw new Error(`OpenAI-compatible API Error: ${errorData.error?.message || response.statusText}`);
     }
 
     const data = await response.json();
@@ -125,7 +125,7 @@ const generateOllamaResponse = async (prompt: string, settings: AppSettings, sig
         throw new Error("Ollama Base URL and Model must be configured.");
     }
 
-    const response = await fetch(`${baseUrl}/api/generate`, {
+    const response = await fetch(`${baseUrl.endsWith('/') ? baseUrl.slice(0,-1) : baseUrl}/api/generate`, {
         method: 'POST',
         headers: { 'Content-Type': 'application/json' },
         body: JSON.stringify({
@@ -150,8 +150,8 @@ export const generateResponse = async (prompt: string, settings: AppSettings, si
         switch (settings.currentProvider) {
             case 'gemini':
                 return await generateGeminiResponse(prompt, settings, signal);
-            case 'openai':
-                return await generateOpenAIResponse(prompt, settings, signal);
+            case 'openai-compatible':
+                return await generateOpenAICompatibleResponse(prompt, settings, signal);
             case 'ollama':
                 return await generateOllamaResponse(prompt, settings, signal);
             default:
@@ -209,10 +209,10 @@ export const fetchAvailableModels = async (settings: AppSettings): Promise<strin
                    .map((m: any) => m.name.replace('models/', ''))
                    .sort();
             }
-            case 'openai': {
-                const { apiKey, baseUrl } = settings.openAIConfig;
+            case 'openai-compatible': {
+                const { apiKey, baseUrl } = settings.openAICompatibleConfig;
                 if (!apiKey || !baseUrl) throw new Error("API Key and Base URL are required.");
-                const response = await fetch(`${baseUrl}/v1/models`, {
+                const response = await fetch(`${baseUrl.endsWith('/') ? baseUrl.slice(0,-1) : baseUrl}/v1/models`, {
                     headers: { 'Authorization': `Bearer ${apiKey}` }
                 });
                 if (!response.ok) {
@@ -225,7 +225,7 @@ export const fetchAvailableModels = async (settings: AppSettings): Promise<strin
             case 'ollama': {
                 const { baseUrl } = settings.ollamaConfig;
                 if (!baseUrl) throw new Error("Base URL is required.");
-                const response = await fetch(`${baseUrl}/api/tags`);
+                const response = await fetch(`${baseUrl.endsWith('/') ? baseUrl.slice(0,-1) : baseUrl}/api/tags`);
                 if (!response.ok) {
                     const errorText = await response.text();
                     throw new Error(`Failed to fetch models: ${response.statusText} - ${errorText}`);

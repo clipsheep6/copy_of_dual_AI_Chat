@@ -40,7 +40,7 @@ export interface Locale {
     settingsTitle: string;
     apiProvider: string;
     geminiSettings: string;
-    openaiSettings: string;
+    openAICompatibleSettings: string;
     ollamaSettings: string;
     apiKey: string;
     apiKeyLoaded: string;
@@ -77,6 +77,7 @@ export interface Locale {
     securityModalTitle: string;
     securityModalP1: string;
     securityModalP2: string;
+
     securityModalL1Title: string;
     securityModalL1Desc: string;
     securityModalL2Title: string;
@@ -125,7 +126,7 @@ export const locales: { [key: string]: Locale } = {
         settingsTitle: "Settings",
         apiProvider: "API Provider",
         geminiSettings: "Gemini Settings",
-        openaiSettings: "OpenAI Compatible Settings",
+        openAICompatibleSettings: "OpenAI Compatible Settings",
         ollamaSettings: "Ollama Settings",
         apiKey: "API Key",
         apiKeyLoaded: "Loaded from environment variable",
@@ -206,7 +207,7 @@ export const locales: { [key: string]: Locale } = {
         settingsTitle: "设置",
         apiProvider: "API 提供商",
         geminiSettings: "Gemini 设置",
-        openaiSettings: "OpenAI 兼容设置",
+        openAICompatibleSettings: "OpenAI 兼容设置",
         ollamaSettings: "Ollama 设置",
         apiKey: "API 密钥",
         apiKeyLoaded: "从环境变量加载",

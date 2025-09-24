@@ -11,6 +11,7 @@ import { useAppUI } from './hooks/useAppUI';
 import { useNotepadLogic } from './hooks/useNotepadLogic';
 import { useChatLogic } from './hooks/useChatLogic';
 import { useLocalization } from './hooks/useLocalization';
+import { ApiProvider } from './types';
 
 const App: React.FC = () => {
     const { t, language, setLanguage } = useLocalization();
@@ -41,6 +42,12 @@ const App: React.FC = () => {
     const toggleLanguage = () => {
         setLanguage(language === 'en' ? 'zh' : 'en');
     };
+    
+    const formatProviderName = (provider: ApiProvider | null) => {
+        if (!provider) return '';
+        if (provider === 'openai-compatible') return 'OpenAI Compatible';
+        return provider.charAt(0).toUpperCase() + provider.slice(1);
+    }
 
     return (
         <div className="flex flex-col h-screen bg-[#1a1a1a] text-gray-200 font-sans">
@@ -63,7 +70,7 @@ const App: React.FC = () => {
                         {chat.isApiReady ? (
                              <div className="flex items-center gap-2 px-2 py-1 bg-green-900/50 border border-green-500/30 rounded-full" title={t('apiKeySet')}>
                                 <div className="w-2.5 h-2.5 bg-green-500 rounded-full animate-pulse"></div>
-                                <span className="text-xs font-semibold capitalize">{chat.activeProvider}</span>
+                                <span className="text-xs font-semibold">{formatProviderName(chat.activeProvider)}</span>
                             </div>
                         ) : (
                             <div className="flex items-center gap-2 px-2 py-1 bg-red-900/50 border border-red-500/30 rounded-full" title={t('apiKeyMissing')}>

@@ -55,7 +55,7 @@ export enum DiscussionMode {
 // New types for multi-provider support
 export enum ApiProvider {
     Gemini = 'gemini',
-    OpenAI = 'openai',
+    OpenAICompatible = 'openai-compatible',
     Ollama = 'ollama',
 }
 
@@ -71,7 +71,7 @@ export interface GeminiConfig {
     thinkingConfig?: GeminiThinkingConfig;
 }
 
-export interface OpenAIConfig {
+export interface OpenAICompatibleConfig {
     apiKey: string;
     baseUrl: string;
     model: string;
@@ -92,7 +92,7 @@ export interface ModelConfig { // This is now a generic model definition, not ti
 export interface AppSettings {
     currentProvider: ApiProvider;
     geminiConfig: GeminiConfig;
-    openAIConfig: OpenAIConfig;
+    openAICompatibleConfig: OpenAICompatibleConfig;
     ollamaConfig: OllamaConfig;
     discussionMode: DiscussionMode;
     maxTurns: number;

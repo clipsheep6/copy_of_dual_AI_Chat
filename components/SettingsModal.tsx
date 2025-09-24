@@ -58,8 +58,8 @@ export const SettingsModal: React.FC<SettingsModalProps> = ({ onClose, settings,
         if (provider === ApiProvider.Gemini) {
             // Can fetch if using a proxy OR if a key is available for the official API
             canAttemptFetch = !!(config.geminiConfig.baseUrl || config.geminiConfig.apiKey || process.env.API_KEY);
-        } else if (provider === ApiProvider.OpenAI) {
-            canAttemptFetch = !!(config.openAIConfig.apiKey && config.openAIConfig.baseUrl);
+        } else if (provider === ApiProvider.OpenAICompatible) {
+            canAttemptFetch = !!(config.openAICompatibleConfig.apiKey && config.openAICompatibleConfig.baseUrl);
         } else if (provider === ApiProvider.Ollama) {
             canAttemptFetch = !!config.ollamaConfig.baseUrl;
         }
@@ -92,6 +92,11 @@ export const SettingsModal: React.FC<SettingsModalProps> = ({ onClose, settings,
         }
         return t('thinkingBudgetGeneralInfo');
     };
+    
+    const formatProviderName = (provider: ApiProvider) => {
+        if (provider === 'openai-compatible') return 'OpenAI Compatible';
+        return provider.charAt(0).toUpperCase() + provider.slice(1);
+    }
 
     const renderProviderSettings = () => {
         switch (localSettings.currentProvider) {
@@ -150,22 +155,22 @@ export const SettingsModal: React.FC<SettingsModalProps> = ({ onClose, settings,
                         </div>
                     </>
                 )
-            case ApiProvider.OpenAI:
+            case ApiProvider.OpenAICompatible:
                  return (
                     <>
-                        <h3 className="text-lg font-semibold col-span-full">{t('openaiSettings')}</h3>
+                        <h3 className="text-lg font-semibold col-span-full">{t('openAICompatibleSettings')}</h3>
                          <div>
                             <label className="block text-sm font-medium text-gray-300 mb-2">{t('apiKey')}</label>
-                            <input type="password" placeholder="Enter your OpenAI-compatible key" value={localSettings.openAIConfig.apiKey} onChange={(e) => setLocalSettings(s => ({...s, openAIConfig: {...s.openAIConfig, apiKey: e.target.value }}))} className="w-full bg-gray-700 border border-gray-600 rounded-md p-2"/>
+                            <input type="password" placeholder="Enter your OpenAI-compatible key" value={localSettings.openAICompatibleConfig.apiKey} onChange={(e) => setLocalSettings(s => ({...s, openAICompatibleConfig: {...s.openAICompatibleConfig, apiKey: e.target.value }}))} className="w-full bg-gray-700 border border-gray-600 rounded-md p-2"/>
                         </div>
                          <div>
                             <label className="block text-sm font-medium text-gray-300 mb-2">{t('baseUrl')}</label>
-                            <input type="text" placeholder="e.g., https://api.openai.com" value={localSettings.openAIConfig.baseUrl} onChange={(e) => setLocalSettings(s => ({...s, openAIConfig: {...s.openAIConfig, baseUrl: e.target.value }}))} className="w-full bg-gray-700 border border-gray-600 rounded-md p-2"/>
+                            <input type="text" placeholder="e.g., https://api.openai.com/v1" value={localSettings.openAICompatibleConfig.baseUrl} onChange={(e) => setLocalSettings(s => ({...s, openAICompatibleConfig: {...s.openAICompatibleConfig, baseUrl: e.target.value }}))} className="w-full bg-gray-700 border border-gray-600 rounded-md p-2"/>
                         </div>
                         <div className="col-span-full">
                             <label className="block text-sm font-medium text-gray-300 mb-2">{t('model')}</label>
                             <div className="flex gap-2">
-                                <input list="openai-models" value={localSettings.openAIConfig.model} onChange={(e) => setLocalSettings(s => ({ ...s, openAIConfig: {...s.openAIConfig, model: e.target.value }}))} placeholder={t('modelInputPlaceholder')} className="w-full bg-gray-700 border border-gray-600 rounded-md p-2"/>
+                                <input list="openai-models" value={localSettings.openAICompatibleConfig.model} onChange={(e) => setLocalSettings(s => ({ ...s, openAICompatibleConfig: {...s.openAICompatibleConfig, model: e.target.value }}))} placeholder={t('modelInputPlaceholder')} className="w-full bg-gray-700 border border-gray-600 rounded-md p-2"/>
                                 <datalist id="openai-models">{availableModels.map(m => <option key={m} value={m} />)}</datalist>
                                 <button onClick={handleFetchModels} disabled={isFetchingModels} className="px-3 py-2 bg-indigo-600 text-white rounded-md hover:bg-indigo-700 disabled:bg-gray-500 flex items-center gap-2">
                                     {isFetchingModels ? <RefreshCw className="animate-spin" size={16}/> : <RefreshCw size={16}/>}
@@ -219,7 +224,7 @@ export const SettingsModal: React.FC<SettingsModalProps> = ({ onClose, settings,
                         <div className="grid grid-cols-3 gap-2 rounded-lg bg-gray-900 p-1">
                              {(Object.values(ApiProvider)).map(provider => (
                                 <button key={provider} onClick={() => setLocalSettings(s => ({ ...s, currentProvider: provider }))} className={`px-4 py-2 text-sm font-semibold rounded-md transition-colors ${localSettings.currentProvider === provider ? 'bg-indigo-600 text-white' : 'text-gray-300 hover:bg-gray-700'}`}>
-                                    {provider.charAt(0).toUpperCase() + provider.slice(1)}
+                                    {formatProviderName(provider)}
                                 </button>
                              ))}
                         </div>
