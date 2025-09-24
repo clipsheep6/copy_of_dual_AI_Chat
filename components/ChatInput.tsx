@@ -1,3 +1,4 @@
+
 import React, { useState, useRef, useCallback } from 'react';
 import { Send, Paperclip, X } from 'lucide-react';
 import { useLocalization } from '../hooks/useLocalization';
@@ -5,17 +6,17 @@ import { useLocalization } from '../hooks/useLocalization';
 interface ChatInputProps {
     onSubmit: (text: string, image?: string) => void;
     isLoading: boolean;
-    isApiKeySet: boolean;
+    isApiReady: boolean;
     disabled?: boolean;
 }
 
-export const ChatInput: React.FC<ChatInputProps> = ({ onSubmit, isLoading, isApiKeySet, disabled = false }) => {
+export const ChatInput: React.FC<ChatInputProps> = ({ onSubmit, isLoading, isApiReady, disabled = false }) => {
     const { t } = useLocalization();
     const [text, setText] = useState('');
     const [image, setImage] = useState<string | null>(null);
     const fileInputRef = useRef<HTMLInputElement>(null);
     
-    const finalDisabled = isLoading || !isApiKeySet || disabled;
+    const finalDisabled = isLoading || !isApiReady || disabled;
 
     const handleSubmit = (e: React.FormEvent) => {
         e.preventDefault();
@@ -79,7 +80,7 @@ export const ChatInput: React.FC<ChatInputProps> = ({ onSubmit, isLoading, isApi
         e.stopPropagation();
     }, []);
 
-    const placeholderText = !isApiKeySet 
+    const placeholderText = !isApiReady 
         ? t('chatPlaceholderApiKeyMissing') 
         : disabled
         ? t('chatPlaceholderAgreementMissing')

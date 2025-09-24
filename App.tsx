@@ -1,5 +1,4 @@
 
-
 import React, { useMemo, useState, useEffect } from 'react';
 import { Settings, BotMessageSquare, BrainCircuit, MessageSquareQuote, FileText, Languages, FilePlus2, Square } from 'lucide-react';
 
@@ -61,10 +60,16 @@ const App: React.FC = () => {
                 <div className="flex items-center gap-4">
                      <div className="flex items-center gap-2">
                         <span className="text-sm text-gray-400">{t('apiStatus')}</span>
-                        {chat.isApiKeySet ? (
-                            <div className="w-3 h-3 bg-green-500 rounded-full" title={t('apiKeySet')}></div>
+                        {chat.isApiReady ? (
+                             <div className="flex items-center gap-2 px-2 py-1 bg-green-900/50 border border-green-500/30 rounded-full" title={t('apiKeySet')}>
+                                <div className="w-2.5 h-2.5 bg-green-500 rounded-full animate-pulse"></div>
+                                <span className="text-xs font-semibold capitalize">{chat.activeProvider}</span>
+                            </div>
                         ) : (
-                            <div className="w-3 h-3 bg-red-500 rounded-full" title={t('apiKeyMissing')}></div>
+                            <div className="flex items-center gap-2 px-2 py-1 bg-red-900/50 border border-red-500/30 rounded-full" title={t('apiKeyMissing')}>
+                                <div className="w-2.5 h-2.5 bg-red-500 rounded-full"></div>
+                                <span className="text-xs font-semibold">{t('apiKeyMissing')}</span>
+                            </div>
                         )}
                      </div>
                      <button
@@ -153,7 +158,7 @@ const App: React.FC = () => {
                             <ChatInput
                                 onSubmit={chat.handleUserSubmit}
                                 isLoading={chat.isLoading}
-                                isApiKeySet={chat.isApiKeySet}
+                                isApiReady={chat.isApiReady}
                                 disabled={!hasAgreedToSecurity}
                             />
                             <div className="text-center text-xs text-gray-400 mt-2">

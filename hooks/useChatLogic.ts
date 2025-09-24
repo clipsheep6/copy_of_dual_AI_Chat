@@ -1,6 +1,7 @@
+
 import { useState, useCallback, useEffect, useRef } from 'react';
-import type { AppSettings, ChatMessage, FailedStepPayload, Conversation } from '../types';
-import { MessageSender, MessagePurpose, DiscussionMode, ApiProvider } from '../types';
+import type { AppSettings, ChatMessage, FailedStepPayload, Conversation, ApiProvider } from '../types';
+import { MessageSender, MessagePurpose, DiscussionMode } from '../types';
 import { generateResponse } from '../services/apiService';
 import { applyNotepadModifications, parseAIResponse, generateUUID } from '../utils/appUtils';
 import { COGNITO_SYSTEM_PROMPT_HEADER, MUSE_SYSTEM_PROMPT_HEADER, DISCUSSION_COMPLETE_TAG, NOTEPAD_INSTRUCTION_PROMPT_PART, AI_DRIVEN_DISCUSSION_INSTRUCTION_PROMPT_PART } from '../constants';
@@ -10,7 +11,7 @@ interface ChatLogicProps {
 }
 
 const defaultSettings: AppSettings = {
-    currentProvider: ApiProvider.Gemini,
+    currentProvider: 'gemini' as ApiProvider,
     geminiConfig: {
         apiKey: '', // Will fallback to process.env.API_KEY
         baseUrl: '',
@@ -39,6 +40,7 @@ export const useChatLogic = ({ initialNotepadContent }: ChatLogicProps) => {
     const [isLoading, setIsLoading] = useState(false);
     const [failedStepInfo, setFailedStepInfo] = useState<FailedStepPayload | null>(null);
     const [settings, setSettings] = useState<AppSettings>(defaultSettings);
+    const [activeProvider, setActiveProvider] = useState<ApiProvider | null>(null);
     const abortControllerRef = useRef<AbortController | null>(null);
     const prevInitialNotepadContent = useRef<string>(initialNotepadContent);
     
@@ -49,6 +51,23 @@ export const useChatLogic = ({ initialNotepadContent }: ChatLogicProps) => {
         discussionLog: [],
         notepadContent: initialNotepadContent,
     }), [initialNotepadContent]);
+
+    // Effect for determining the active API provider with fallback logic
+    useEffect(() => {
+        const isGeminiConfigured = !!(settings.geminiConfig.apiKey || process.env.API_KEY || settings.geminiConfig.baseUrl);
+        const isOpenAIConfigured = !!(settings.openAIConfig.apiKey && settings.openAIConfig.baseUrl);
+        const isOllamaConfigured = !!settings.ollamaConfig.baseUrl;
+
+        if (isGeminiConfigured) {
+            setActiveProvider('gemini');
+        } else if (isOpenAIConfigured) {
+            setActiveProvider('openai');
+        } else if (isOllamaConfigured) {
+            setActiveProvider('ollama');
+        } else {
+            setActiveProvider(null);
+        }
+    }, [settings]);
 
     // Effect for initial load
     useEffect(() => {
@@ -74,19 +93,7 @@ export const useChatLogic = ({ initialNotepadContent }: ChatLogicProps) => {
 
     const discussionLog = currentConversation?.discussionLog || [];
     const notepadContent = currentConversation?.notepadContent || '';
-
-    const isApiKeySet = useCallback(() => {
-        switch(settings.currentProvider) {
-            case ApiProvider.Gemini:
-                return !!(settings.geminiConfig.apiKey || process.env.API_KEY);
-            case ApiProvider.OpenAI:
-                return !!settings.openAIConfig.apiKey;
-            case ApiProvider.Ollama:
-                return true; // No key needed
-            default:
-                return false;
-        }
-    }, [settings]);
+    const isApiReady = activeProvider !== null;
 
     const addMessage = useCallback((message: Omit<ChatMessage, 'id' | 'timestamp'>): ChatMessage => {
         const newMessage: ChatMessage = {
@@ -121,7 +128,11 @@ export const useChatLogic = ({ initialNotepadContent }: ChatLogicProps) => {
     ): Promise<{ spokenResponse: string; newNotepadContent: string; durationMs: number; hasFinishTag: boolean }> => {
         const startTime = Date.now();
         let newNotepadContent = currentNotepad;
-        const responseText = await generateResponse(prompt, settings, signal);
+        
+        // Use the determined active provider for the API call
+        const apiSettings = { ...settings, currentProvider: activeProvider! };
+        
+        const responseText = await generateResponse(prompt, apiSettings, signal);
         if (signal.aborted) throw new DOMException('Aborted by user', 'AbortError');
         if (!responseText) throw new Error("Empty response from API.");
 
@@ -154,7 +165,7 @@ export const useChatLogic = ({ initialNotepadContent }: ChatLogicProps) => {
         });
 
         return { spokenResponse: finalSpokenResponse, newNotepadContent, durationMs, hasFinishTag };
-    }, [settings]);
+    }, [settings, activeProvider]);
 
 
     const runDebate = useCallback(async (userMessage: ChatMessage) => {
@@ -251,11 +262,11 @@ export const useChatLogic = ({ initialNotepadContent }: ChatLogicProps) => {
     
     const handleUserSubmit = useCallback((text: string, image?: string) => {
         if (!currentConversation || isLoading) return;
-        if (!isApiKeySet()) {
+        if (!isApiReady) {
             addMessage({
                 sender: MessageSender.System,
                 purpose: MessagePurpose.Error,
-                text: "API credentials for the current provider are not set. Please check the settings."
+                text: "No API provider is configured. Please check the settings."
             });
             return;
         }
@@ -266,7 +277,7 @@ export const useChatLogic = ({ initialNotepadContent }: ChatLogicProps) => {
             image,
         });
         runDebate(userMessage);
-    }, [runDebate, isApiKeySet, addMessage, currentConversation, isLoading]);
+    }, [runDebate, isApiReady, addMessage, currentConversation, isLoading]);
 
     const handleRetryFailedStep = useCallback(async () => {
         if (!failedStepInfo) return;
@@ -302,6 +313,8 @@ export const useChatLogic = ({ initialNotepadContent }: ChatLogicProps) => {
         }
     }, [addMessage]);
 
+
+
     const startNewConversation = () => {
         cancelGeneration();
         setCurrentConversation(createNewConversation());
@@ -319,7 +332,8 @@ export const useChatLogic = ({ initialNotepadContent }: ChatLogicProps) => {
         notepadContent,
         isLoading,
         failedStepInfo,
-        isApiKeySet: isApiKeySet(),
+        isApiReady,
+        activeProvider,
         settings,
         setSettings,
         handleUserSubmit,
