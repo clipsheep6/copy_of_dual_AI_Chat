@@ -1,3 +1,4 @@
+
 import { GoogleGenAI } from '@google/genai';
 import type { AppSettings } from '../types';
 
@@ -88,7 +89,7 @@ const generateGeminiResponse = async (prompt: string, settings: AppSettings, sig
 
         return response.text;
     }
-};
+}
 
 const generateOpenAICompatibleResponse = async (prompt: string, settings: AppSettings, signal: AbortSignal): Promise<string> => {
     const { apiKey, baseUrl, model } = settings.openAICompatibleConfig;
@@ -117,7 +118,7 @@ const generateOpenAICompatibleResponse = async (prompt: string, settings: AppSet
 
     const data = await response.json();
     return data.choices[0]?.message?.content || "";
-};
+}
 
 const generateOllamaResponse = async (prompt: string, settings: AppSettings, signal: AbortSignal): Promise<string> => {
     const { baseUrl, model } = settings.ollamaConfig;
@@ -143,7 +144,7 @@ const generateOllamaResponse = async (prompt: string, settings: AppSettings, sig
 
     const data = await response.json();
     return data.response || "";
-};
+}
 
 export const generateResponse = async (prompt: string, settings: AppSettings, signal: AbortSignal): Promise<string> => {
     try {
@@ -169,7 +170,7 @@ export const generateResponse = async (prompt: string, settings: AppSettings, si
         }
         throw new Error("An unknown error occurred while communicating with the API.");
     }
-};
+}
 
 export const fetchAvailableModels = async (settings: AppSettings): Promise<string[]> => {
     try {
@@ -241,4 +242,4 @@ export const fetchAvailableModels = async (settings: AppSettings): Promise<strin
         // Re-throw to be caught by the UI
         throw e;
     }
-};
+}

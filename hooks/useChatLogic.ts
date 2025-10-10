@@ -1,7 +1,9 @@
 
+
 import { useState, useCallback, useEffect, useRef } from 'react';
-import type { AppSettings, ChatMessage, FailedStepPayload, Conversation, ApiProvider } from '../types';
-import { MessageSender, MessagePurpose, DiscussionMode } from '../types';
+// FIX: Move ApiProvider from a type-only import to a value import to allow using its members (e.g., ApiProvider.Gemini).
+import type { AppSettings, ChatMessage, FailedStepPayload, Conversation } from '../types';
+import { MessageSender, MessagePurpose, DiscussionMode, ApiProvider } from '../types';
 import { generateResponse } from '../services/apiService';
 import { applyNotepadModifications, parseAIResponse, generateUUID } from '../utils/appUtils';
 import { COGNITO_SYSTEM_PROMPT_HEADER, MUSE_SYSTEM_PROMPT_HEADER, DISCUSSION_COMPLETE_TAG, NOTEPAD_INSTRUCTION_PROMPT_PART, AI_DRIVEN_DISCUSSION_INSTRUCTION_PROMPT_PART } from '../constants';
@@ -11,7 +13,8 @@ interface ChatLogicProps {
 }
 
 const defaultSettings: AppSettings = {
-    currentProvider: 'gemini' as ApiProvider,
+    // FIX: Use the ApiProvider enum member for type safety and consistency.
+    currentProvider: ApiProvider.Gemini,
     geminiConfig: {
         apiKey: '', // Will fallback to process.env.API_KEY
         baseUrl: '',
@@ -54,19 +57,30 @@ export const useChatLogic = ({ initialNotepadContent }: ChatLogicProps) => {
 
     // Effect for determining the active API provider with fallback logic
     useEffect(() => {
-        const isGeminiConfigured = !!(settings.geminiConfig.apiKey || process.env.API_KEY || settings.geminiConfig.baseUrl);
-        const isOpenAICompatibleConfigured = !!(settings.openAICompatibleConfig.apiKey && settings.openAICompatibleConfig.baseUrl);
-        const isOllamaConfigured = !!settings.ollamaConfig.baseUrl;
+        const providerConfig = {
+            gemini: !!(settings.geminiConfig.apiKey || process.env.API_KEY || settings.geminiConfig.baseUrl),
+            'openai-compatible': !!(settings.openAICompatibleConfig.apiKey && settings.openAICompatibleConfig.baseUrl),
+            ollama: !!settings.ollamaConfig.baseUrl,
+        };
 
-        if (isGeminiConfigured) {
-            setActiveProvider('gemini');
-        } else if (isOpenAICompatibleConfigured) {
-            setActiveProvider('openai-compatible');
-        } else if (isOllamaConfigured) {
-            setActiveProvider('ollama');
+        let providerToUse: ApiProvider | null = null;
+
+        // 1. Respect the user's current choice in settings if it's configured
+        if (settings.currentProvider && providerConfig[settings.currentProvider]) {
+            providerToUse = settings.currentProvider;
         } else {
-            setActiveProvider(null);
+            // 2. If not, find the first available provider as a fallback
+            // FIX: Use ApiProvider enum members for assignment. String literals are not assignable to the ApiProvider enum type here.
+            if (providerConfig.gemini) {
+                providerToUse = ApiProvider.Gemini;
+            } else if (providerConfig['openai-compatible']) {
+                providerToUse = ApiProvider.OpenAICompatible;
+            } else if (providerConfig.ollama) {
+                providerToUse = ApiProvider.Ollama;
+            }
         }
+
+        setActiveProvider(providerToUse);
     }, [settings]);
 
     // Effect for initial load

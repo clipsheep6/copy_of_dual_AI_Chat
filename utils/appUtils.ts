@@ -1,3 +1,4 @@
+
 import type { NotepadAction } from '../types';
 
 export const generateUUID = (): string => {
@@ -10,7 +11,7 @@ export const generateUUID = (): string => {
         const v = c === 'x' ? r : (r & 0x3) | 0x8;
         return v.toString(16);
     });
-};
+}
 
 const TAG_REGEX = /<np-([\w-]+)([^>]*)>([\s\S]*?)<\/np-\1>|<np-([\w-]+)([^>]*?)\/>/gi;
 const ATTR_REGEX = /(\w+)="([^"]*)"/g;
@@ -69,7 +70,7 @@ export const parseAIResponse = (responseText: string): { spokenResponse: string;
     }
 
     return { spokenResponse, notepadActions: actions };
-};
+}
 
 
 export const applyNotepadModifications = (currentContent: string, actions: NotepadAction[]): string => {
@@ -119,4 +120,4 @@ export const applyNotepadModifications = (currentContent: string, actions: Notep
     }
     
     return newContent;
-};
+}

@@ -1,3 +1,4 @@
+
 import { GoogleGenAI } from '@google/genai';
 import type { ModelConfig } from '../types';
 
@@ -29,4 +30,4 @@ export const generateResponse = async (prompt: string, modelConfig: ModelConfig)
         }
         throw new Error("An unknown error occurred while communicating with the Gemini API.");
     }
-};
+}
