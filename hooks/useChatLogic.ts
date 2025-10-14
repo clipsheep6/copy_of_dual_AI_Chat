@@ -188,8 +188,16 @@ export const useChatLogic = ({ initialNotepadContent }: ChatLogicProps) => {
         abortControllerRef.current = new AbortController();
         const signal = abortControllerRef.current.signal;
         
+        // Check if this is the first real user interaction in a new chat.
+        // The discussionLog at this point does not yet contain the new userMessage.
+        const isFirstTurn = discussionLog.length === 0;
+
         let debateLog = [...discussionLog, userMessage];
-        let currentNotepad = notepadContent;
+        // If it's the first turn, the AI should start with a blank notepad context,
+        // effectively ignoring the initial welcome message that is displayed to the user.
+        // In subsequent turns, it uses the actual, evolving notepad content.
+        let currentNotepad = isFirstTurn ? '' : notepadContent;
+
 
         try {
             const totalTurns = settings.discussionMode === DiscussionMode.Fixed ? settings.maxTurns : 10;
